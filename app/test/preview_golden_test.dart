@@ -1,3 +1,9 @@
+@Tags(['golden'])
+library;
+
+// 这组用例是「视觉预览」：把界面渲染成 PNG 给人看，并锁住像素防回归。
+// 它依赖 Windows 上的微软雅黑字体（C:\Windows\Fonts\msyh.ttc），所以在 Linux CI 上
+// 必然像素不一致 —— CI 用 `flutter test --exclude-tags golden` 跳过，本地照常跑。
 import 'dart:io';
 
 import 'package:flutter/material.dart';

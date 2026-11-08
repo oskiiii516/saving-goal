@@ -30,7 +30,9 @@ jobs:
       - name: 静态检查与测试
         run: |
           flutter analyze
-          flutter test
+          # golden 是「视觉预览」，图是按 Windows 的微软雅黑渲染的，
+          # Linux runner 上必然像素不一致，所以 CI 排除，只跑逻辑测试
+          flutter test --exclude-tags golden
         working-directory: app
 
       - name: 构建 APK
