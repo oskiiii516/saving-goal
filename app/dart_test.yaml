@@ -1,0 +1,9 @@
+# dart test 配置
+#
+# golden 用例只在开发机上跑：基线图是用 Windows 的微软雅黑渲染的，
+# Linux CI 上没有这个字体，像素必然对不上。CI 用
+#   flutter test --exclude-tags golden
+# 跳过它们，本地跑 `flutter test` 仍然全量执行。
+tags:
+  golden:
+    skip: false
