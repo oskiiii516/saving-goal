@@ -1,0 +1,39 @@
+# —— Flutter / Dart ——
+app/.dart_tool/
+app/build/
+app/.flutter-plugins-dependencies
+app/.packages
+app/**/generated_plugin_registrant.dart
+**/*.g.dart.bak
+
+# 但 drift 生成的 database.g.dart 要提交（别人 clone 后不必先跑 build_runner）
+!app/lib/data/database.g.dart
+
+# —— Android ——
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+app/android/app/*.jks
+app/android/app/*.keystore
+*.jks
+*.keystore
+app/android/app/src/main/res/**/ic_launcher.png.bak
+
+# —— 二进制与大文件 ——
+*.apk
+*.aab
+*.zip
+downloads/
+
+# —— 编辑器 / 系统 ——
+.idea/
+.vscode/
+*.iml
+*.log
+.DS_Store
+Thumbs.db
+
+# —— Python 缓存（图标脚本）——
+__pycache__/
+*.pyc
+app/test/failures/
