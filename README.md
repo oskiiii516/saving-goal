@@ -265,6 +265,7 @@ cd saving-goal-app/prototype && python -m http.server 8765
 | 多目标本月合计负担 | `aggregate()` + 首页顶部汇总卡 |
 | **月度提醒到日子催存** | `services/reminder_service.dart` + `ui/settings_page.dart` |
 | **累计曲线 / 每月应存柱状图** | `ui/charts.dart`（`CumulativeChart` / `MonthlyBarChart`）+ 统计页 |
+| **按年统计：每年应存 / 实存列表 + 年度柱状图** | `engine.yearlySummary()` → `YearSummary`；`ui/charts.dart` 的 `YearlyBarChart` + `ui/insights_page.dart` 的 `_YearRow` |
 | **智能补缴分配（按优先级）** | `core/allocate.dart` + `ui/allocation_sheet.dart`，目标带 `priority` 字段可排序 |
 | **深色 / 浅色 / 跟随系统** | `ui/palette.dart`（`ThemeExtension`）+ `ui/theme.dart`，切换在设置页 |
 | 数据本地持久化 | drift `saving_goal` 数据库，schemaVersion 4（v1.1 加 `priority`、v1.2 加 `initial_cents`、v1.3 加 `pay_day`，都带迁移） |
@@ -287,7 +288,7 @@ cd saving-goal-app/prototype && python -m http.server 8765
 cd app                             # 仓库根目录下的 app/
 
 flutter pub get
-flutter test                       # 49 个用例（算法 31 + 分配 7 + 组件 4 + 视觉 7）
+flutter test                       # 54 tests（算法 31 + 分配 7 + 组件 4 + 视觉 7）
 flutter test test/preview_golden_test.dart --update-goldens   # 重新生成 test/golden/*.png
 flutter build apk --release        # 产物 build/app/outputs/flutter-apk/app-release.apk
 ```
@@ -395,11 +396,17 @@ CREATE INDEX idx_deposit_goal_ym ON deposit(goal_id, ym);
 | M3.7 | 反向规划（按月供推期限） | ✅ v1.3.0 |
 | M3.8 | 每目标「每月几号存」+ 当天提醒 | ✅ v1.3.0 / v1.3.1 |
 | M3.9 | 品牌化：改名「一个小目标」+ 新图标 + 关于页 | ✅ v1.4.0 |
+| M3.10 | 按年统计（年度应存/实存列表 + 年度柱状图） | ✅ v1.5.0 |
 | M4 | 桌面小组件「本月还差 X 元」、补缴预览（改数字看未来月供） | ⬜ 待做 |
 | M5 | 可选：WebDAV 同步、多币种、CSV 导入导出、备份还原 | ⬜ 待做 |
 
 ### 版本历史
 
+- **v1.5.0**（2026-11）
+  - **按年存钱**：统计页新增「按年存钱」区块 —— 上面一张年度双柱图（灰=应存、绿/橙=实存，今年高亮），下面逐年一行：`2026 今年 · 2 个目标 · 4 笔 · 完成 34% · ¥3,900.00`，再跟一条进度条和「还差 X / 计划 Y」；未来年份显示「计划 X · 还没到」
+  - **年度计划额用基准口径**（`buildSchedule`），不是「含补缴的应存」：否则一笔老欠缴会把当年计划额撑大、年度进度永远显示没达成。这条取舍写进了 `engine.dart` 的注释，有 5 组测试守着（`[20]`–`[24]`）
+  - **期初已存不计入任何一年**：那是建目标之前就有的钱，年度「实存」只算当年新存进去的
+  - 只有流水、没有计划年份（比如补录了去年的存入）也会单独列出来
 - **v1.4.0**（2026-11）
   - **改名「一个小目标」**（应用名、启动页、通知文案、关于页统一）
   - **新图标**：深色底 + 绿色 3/4 进度环 + 中心圆点（`assets/icon/make_icon_ring.py`，4x 超采样 + 渐变分段 + 圆头收口），补了 Android 8+ 的自适应图标（`mipmap-anydpi-v26/ic_launcher.xml` + `ic_launcher_foreground` 五个密度，前景缩到 60% 保证不被启动器遮罩裁到）

@@ -221,6 +221,42 @@ class Aggregate {
 
 // ══════════════ 纯函数引擎 ══════════════
 
+/// 按年汇总：这一年计划存多少、实际存了多少
+///
+/// 计划额来自各目标月度时间表在这一年的合计，实存额来自流水。
+/// 期初已存不归属任何一年（那是建目标之前就有的钱），
+/// 所以这里的「实存」只算这一年新存进去的。
+class YearSummary {
+  final int year;
+  final int plannedCents;
+  final int actualCents;
+  final int depositsCount;
+  final int goalCount;
+  final bool isCurrent;
+  final bool isFuture;
+
+  const YearSummary({
+    required this.year,
+    required this.plannedCents,
+    required this.actualCents,
+    required this.depositsCount,
+    required this.goalCount,
+    required this.isCurrent,
+    required this.isFuture,
+  });
+
+  /// 这一年还差多少（负数表示超额）
+  int get gapCents => plannedCents - actualCents;
+
+  bool get met => plannedCents > 0 && actualCents >= plannedCents;
+
+  /// 没有计划的年份，只要存过就算完成
+  double get progress {
+    if (plannedCents <= 0) return actualCents > 0 ? 1 : 0;
+    return (actualCents / plannedCents).clamp(0.0, 1.0);
+  }
+}
+
 class SavingsEngine {
   const SavingsEngine._();
 
@@ -277,6 +313,59 @@ class SavingsEngine {
     final rows = List<int>.filled(n, per);
     rows[n - 1] += remaining - per * n;
     return rows;
+  }
+
+
+  /// 第 [i] 个月在基准时间表里的金额（最后一月吸收除法余数）
+  static int _baseOfMonth(GoalComputation plan, int i) {
+    final n = plan.months.length;
+    if (i < 0 || i >= n) return 0;
+    if (i < n - 1) return plan.baseMonthlyCents;
+    final total =
+        math.max<int>(0, plan.targetCents - math.max<int>(0, plan.initialCents));
+    return math.max<int>(0, total - plan.baseMonthlyCents * (n - 1));
+  }
+
+  /// 按年聚合：返回有数据（有计划或有流水）的每一年，按年份升序
+  static List<YearSummary> yearlySummary({
+    required List<GoalComputation> plans,
+    required List<Deposit> deposits,
+    required String nowYm,
+  }) {
+    final planned = <int, int>{};
+    final goalsOf = <int, Set<String>>{};
+    for (final plan in plans) {
+      for (var i = 0; i < plan.months.length; i++) {
+        final y = int.parse(plan.months[i].ym.substring(0, 4));
+        // 用基准额，不用「含补缴的应存」：否则一个老欠缴会把这年的计划额撑大，
+        // 年度进度永远显示没达成，也不符合「这一年本该存多少」的语义。
+        planned[y] = (planned[y] ?? 0) + _baseOfMonth(plan, i);
+        (goalsOf[y] ??= <String>{}).add(plan.goalId);
+      }
+    }
+
+    final actual = <int, int>{};
+    final count = <int, int>{};
+    for (final d in deposits) {
+      final y = int.parse(d.ym.substring(0, 4));
+      actual[y] = (actual[y] ?? 0) + d.amountCents;
+      count[y] = (count[y] ?? 0) + 1;
+    }
+
+    final years = <int>{...planned.keys, ...actual.keys}.toList()..sort();
+    final nowYear = int.parse(nowYm.substring(0, 4));
+    return [
+      for (final y in years)
+        YearSummary(
+          year: y,
+          plannedCents: planned[y] ?? 0,
+          actualCents: actual[y] ?? 0,
+          depositsCount: count[y] ?? 0,
+          goalCount: goalsOf[y]?.length ?? 0,
+          isCurrent: y == nowYear,
+          isFuture: y > nowYear,
+        ),
+    ];
   }
 
   /// 反向规划：已知每月能存 [monthlyCents]，算出需要多少个月
