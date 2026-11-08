@@ -1,5 +1,9 @@
 # 一个小目标 · Saving Goal
 
+[![build-apk](https://github.com/oskiiii516/saving-goal/actions/workflows/build-apk.yml/badge.svg)](https://github.com/oskiiii516/saving-goal/actions/workflows/build-apk.yml)
+[![license](https://img.shields.io/badge/license-MIT-3FB950.svg)](LICENSE)
+[![platform](https://img.shields.io/badge/Android-7.0%2B-3FB950.svg)](#)
+
 > 作者：**兮狐**（QQ 1015687519）· 许可证 MIT
 >
 > 一句话：这是一个能管「每月该存多少、实际存了多少、存少了自动摊还到下个月/未来几个月、并保证在截止月前存够」的目标储蓄 App。
